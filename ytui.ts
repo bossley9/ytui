@@ -3,13 +3,18 @@
 // @ts-ignore
 import { YTResponse, Video } from "./types.ts";
 // @ts-ignore
-import { FQDN, SEARCH_RESULTS_PATH } from "./constants.ts";
+import { RED, NC, FQDN, SEARCH_RESULTS_PATH } from "./constants.ts";
 // @ts-ignore
 import { parseArgs, urlEncode } from "./utils.ts";
 
 // pseudo main method bc I'm used to C at this point
 const main = async (): Promise<void> => {
   const searchQuery = parseArgs().join(" ");
+
+  if (searchQuery.length === 0) {
+    throw "USAGE: ytui.ts [search query]";
+  }
+
   const searchQueryEncoded = urlEncode(searchQuery);
   const url = `${FQDN}${SEARCH_RESULTS_PATH}${searchQueryEncoded}`;
 
@@ -84,4 +89,9 @@ const main = async (): Promise<void> => {
   );
 };
 
-main();
+try {
+  // @ts-ignore
+  await main();
+} catch (e) {
+  console.error(`${RED}${e}${NC}`);
+}
