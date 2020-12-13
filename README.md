@@ -1,2 +1,3 @@
 # ytui
-An ncurses-like terminal interface for youtube
+
+An ncurses-like terminal interface for youtube written in Typescript
