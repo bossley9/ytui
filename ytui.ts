@@ -1,95 +1,9 @@
 #!/usr/bin/env -S deno run --allow-net
-// youtube browser
 
-/*
- * types
- */
-
-type YTAccessibility = {
-  accessibilityData: {
-    label: string;
-  };
-};
-
-type YTRuns = {
-  text: string;
-}[];
-
-type YTVideo = {
-  videoRenderer: {
-    videoId: string;
-    thumbnail: {
-      thumbnails: {
-        url: string;
-        width: number;
-        height: number;
-      }[];
-    };
-    title: {
-      runs: YTRuns;
-      accessibility: YTAccessibility;
-    };
-    descriptionSnippet: {
-      runs: YTRuns;
-    } | null;
-    longBylineText: any;
-    publishedTimeText: {
-      simpleText: string;
-    };
-    lengthText: {
-      accessibility: YTAccessibility;
-      simpleText: string;
-    };
-    viewCountText: {
-      simpleText: string;
-    };
-    navigationEndpoint: {
-      clickTrackingParams: any;
-      commandMetadata: {
-        webCommandMetadata: {
-          url: string;
-          webPageType: string;
-          rootVe: string;
-        };
-      };
-    };
-  };
-};
-
-type YTSectionRenderer = { contents: any[] };
-
-type YTResponse = {
-  responseContext: object;
-  estimatedResults: number;
-  contents: {
-    twoColumnSearchResultsRenderer: {
-      primaryContents: {
-        sectionListRenderer: {
-          contents: YTSectionRenderer | any;
-        };
-      };
-    };
-  };
-};
-
-type Video = {
-  thumbnail: string;
-  title: string;
-  desc: string;
-  author: string;
-  authorChannel: string;
-  published: string;
-  length: string;
-  views: string;
-  url: string;
-};
-
-/*
- * constants
- */
-
-const FQDN: string = "https://www.youtube.com";
-const BASE_URL: string = `${FQDN}/results?search_query=`;
+// @ts-ignore
+import { YTResponse, Video } from "./types.ts";
+// @ts-ignore
+import { BASE_URL, FQDN } from "./constants.ts";
 
 /*
  * functions
