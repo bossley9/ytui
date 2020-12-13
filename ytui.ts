@@ -3,36 +3,15 @@
 // @ts-ignore
 import { YTResponse, Video } from "./types.ts";
 // @ts-ignore
-import { BASE_URL, FQDN } from "./constants.ts";
-
-/*
- * functions
- */
-
-const parseArgs = (): string[] => {
-  // @ts-ignore
-  // apparently Deno is undefined
-  return Deno.args;
-};
-
-const getSearchStr = (): string => {
-  const searchArgs: string[] = parseArgs();
-  return searchArgs.join(" ");
-};
-
-const urlEncode = (url: string): string => {
-  return encodeURIComponent(url);
-};
-
-/*
- * main
- */
+import { FQDN, SEARCH_RESULTS_PATH } from "./constants.ts";
+// @ts-ignore
+import { parseArgs, urlEncode } from "./utils.ts";
 
 // pseudo main method bc I'm used to C at this point
 const main = async (): Promise<void> => {
-  const searchStr = getSearchStr();
-  const encodedUrl = urlEncode(searchStr);
-  const url = BASE_URL + encodedUrl;
+  const searchQuery = parseArgs().join(" ");
+  const searchQueryEncoded = urlEncode(searchQuery);
+  const url = `${FQDN}${SEARCH_RESULTS_PATH}${searchQueryEncoded}`;
 
   let raw: string = "";
 
