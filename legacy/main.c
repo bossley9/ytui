@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <curl/curl.h>
+
+/* typedef struct _string { */
+/*   char* str; */
+/*   unsigned int len; */
+/* } string; */
 
 /* ansi color codes */
 const char* RED = "\033[31m";
@@ -82,6 +88,25 @@ char* urlEncode(char* url) {
   return buffer;
 }
 
+size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) {
+  char* str = (char*) userdata;
+  unsigned int len = getLength(str);
+  unsigned int newLen = len + size*nmemb;
+
+  /* printf("data so far is %s\n", str); */
+  /* printf("len is %i\n", len); */
+
+  /* str = (char*) realloc(str, newLen + 1); */
+  /* memcpy(str+len, ptr, size+nmemb); */
+  /* *(str + newLen) = '\0'; */
+
+  /* strcat(userdata, ptr); */
+
+  /* printf("bytes are %s\n", ptr); */
+
+  return size*nmemb;
+}
+
 int main(int argc, char* argv[]) {
   if (argc == 1) {
     printf("%sUSAGE: ytui [search query]%s\n", RED, NC);
@@ -102,14 +127,43 @@ int main(int argc, char* argv[]) {
   strcat(searchUrl, RESOURCE_SEARCH_RESULTS);
   strcat(searchUrl, searchStr);
 
-  printf("url is %s\n", searchUrl);
-
   free(searchStr);
-  free(searchUrl);
 
-  /* GET /http-get-and-post-methods-example-in-c/ HTTP/1.1 */
-  /* Host: www.aticleworld.com */
-  /* Content-Type: text/plain */
+  /* printf("url is %s\n", searchUrl); */
+
+  /* TODO */
+  /* use multi for async calls */
+
+  CURL* curl = curl_easy_init();
+  if (!curl) {
+    printf("%sERROR: Unable to use libcurl. Make sure curl is installed.%s\n", RED, NC);
+    return 1;
+  }
+
+  /* char* data = malloc(sizeof(char) * 20 * 1024); */
+  char* data = malloc(sizeof(char));
+  *data = '\0';
+
+  curl_easy_setopt(curl, CURLOPT_URL, searchUrl);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
+
+  /* Perform the request, res will get the return code */
+  CURLcode res = curl_easy_perform(curl);
+
+  printf("BEGIN\n%s\nEOF\n", data);
+  /* Check for errors */
+  if (res != CURLE_OK) {
+    printf("%sERROR: Status code %i%s\n", RED, res, NC);
+    printf("%sERROR: Unable to perform get request. Make sure curl is installed.%s\n", RED, NC);
+    return 1;
+  }
+
+  /* cleanup */
+  curl_easy_cleanup(curl);
+
+  free(searchUrl);
+  free(data);
 
   return 0;
 }

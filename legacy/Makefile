@@ -7,7 +7,7 @@ CP=cp -f
 RM=rm -f
 MKDIR_P=mkdir -p
 
-CFLAGS = -O2
+CFLAGS = -O2 -lcurl
 
 all:
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BINARY) main.c

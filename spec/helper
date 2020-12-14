@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd "${XDG_CONFIG_HOME}/ytui/legacy"
+
 sudo make clean install
 
 ytui hello world 123
