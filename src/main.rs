@@ -15,3 +15,14 @@ fn main() {
 
     println!("You inputted: {}", input.trim());
 }
+
+#[cfg(test)]
+mod tests {
+    // use super::*;
+
+    // routine dummy test
+    #[test]
+    fn test_test() {
+        assert_eq!(1 + 2, 3);
+    }
+}
