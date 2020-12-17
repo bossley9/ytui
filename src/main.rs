@@ -1,19 +1,39 @@
-use std::io;
+use std::env;
+
+const RED: &str = "\x1b[31m";
+const NC: &str = "\x1b[0m";
+
+// const FQDN: &str = "https://youtube.com";
+// const PATH_SEARCH_RESULTS: &str = "results?search_query=";
 
 fn main() {
-    println!("Search:");
+    // search command line args
+    let args = env::args().skip(1);
 
-    let mut input = String::new();
+    let search_str: String = args
+        .fold(String::new(), |acc, el| acc + &el + " ")
+        .trim()
+        .to_string();
 
-    match io::stdin().read_line(&mut input) {
-        Ok(n) => {
-            println!("bytes: {}", n);
-            println!("input: {}", input);
-        }
-        Err(error) => println!("error: {}", error),
+    if search_str.len() == 0 {
+        println!("{}USAGE: ytui [search query]{}", RED, NC);
+        return;
     }
 
-    println!("You inputted: {}", input.trim());
+    println!("search_str is \"{}\"", search_str);
+
+    // encode search query
+
+    // construct url
+
+    // fetch data (with error handling)
+
+    // 1. condense to a single line (remove new line chars)
+    // 2. trim start up to "var ytInitialData = "
+    // 3. trim end starting from "</script>"
+    // 4. parse json
+
+    // return results
 }
 
 #[cfg(test)]

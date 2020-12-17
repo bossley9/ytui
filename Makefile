@@ -16,6 +16,9 @@ install: all
 	$(MKDIR_P) $(BIN)
 	$(CP) $(RELEASE)/$(BINARY) $(BIN)/$(BINARY)
 
+check:
+	cargo check
+
 clean:
 	$(RM) $(TARGET)
 
@@ -25,4 +28,4 @@ test:
 uninstall:
 	$(RM) $(BIN)/$(BINARY)
 
-.PHONY: all install clean test uninstall
+.PHONY: all install check clean test uninstall
