@@ -1,10 +1,12 @@
+extern crate reqwest;
+
 use std::env;
 
 const RED: &str = "\x1b[31m";
 const NC: &str = "\x1b[0m";
 
 const FQDN: &str = "https://youtube.com";
-const PATH_SEARCH_RESULTS: &str = "results?search_query=";
+const PATH_SEARCH_RESULTS: &str = "/results?search_query=";
 
 fn encode(unencoded_url: &mut String) {
     *unencoded_url = str::replace(unencoded_url, "%", "%25");
@@ -12,7 +14,8 @@ fn encode(unencoded_url: &mut String) {
     *unencoded_url = str::replace(unencoded_url, "'", "%91");
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // search command line args
     let args = env::args().skip(1);
 
@@ -35,7 +38,17 @@ fn main() {
     url.push_str(&search_str);
 
     // fetch data (with error handling)
-    println!("url is \"{}\"", url);
+    let res: reqwest::Response = match reqwest::get(&url).await {
+        Ok(res) => res,
+        Err(_) => return,
+    };
+
+    let data = match res.text().await {
+        Ok(res) => res,
+        Err(_) => "".to_string(),
+    };
+
+    println!("data is {}", data);
 
     // 1. condense to a single line (remove new line chars)
     // 2. trim start up to "var ytInitialData = "

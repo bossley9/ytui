@@ -19,6 +19,9 @@ install: all
 check:
 	cargo check
 
+debug:
+	cargo build
+
 clean:
 	$(RM) $(TARGET)
 
@@ -28,4 +31,4 @@ test:
 uninstall:
 	$(RM) $(BIN)/$(BINARY)
 
-.PHONY: all install check clean test uninstall
+.PHONY: all install check debug clean test uninstall

@@ -1,5 +1,5 @@
 #!/bin/sh
 
-sudo make clean install
+sudo make debug
 
-ytui hello world 123
+./target/debug/ytui hello world 123
