@@ -10,6 +10,36 @@ const NC: &str = "\x1b[0m";
 const FQDN: &str = "https://youtube.com";
 const PATH_SEARCH_RESULTS: &str = "/results?search_query=";
 
+struct Video {
+    id: String,
+    name: String,
+    thumbnail: String,
+    desc: String,
+    channel_name: String,
+    channel_url: String,
+    published: String,
+    length: String,
+    is_live: bool,
+    views: u64,
+    url: String,
+}
+
+// struct Playlist {
+//     channel: Channel,
+//     name: String,
+//     desc: String,
+//     num_videos: u16,
+//     videos: Vec<Video>,
+// }
+
+// struct Channel {
+//     id: String,
+//     subscribers: u32,
+//     name: String,
+//     videos: Vec<Video>,
+//     playlists: Vec<Playlist>,
+// }
+
 fn encode(unencoded_url: &mut String) {
     *unencoded_url = str::replace(unencoded_url, "%", "%25");
     *unencoded_url = str::replace(unencoded_url, " ", "%20");
@@ -69,20 +99,6 @@ async fn main() {
 
     // println!("{}", content);
 
-    struct Video {
-        id: String,
-        title: String,
-        thumbnail: String,
-        desc: String,
-        author: String,
-        author_channel: String,
-        published: String,
-        length: String,
-        is_live: bool,
-        views: u64,
-        url: String,
-    }
-
     let mut videos: Vec<Video> = Vec::new();
 
     for i in content.members() {
@@ -94,19 +110,19 @@ async fn main() {
             let thumbnail: String = video_raw["thumbnail"]["url"].to_string();
 
             // TODO join
-            let title = video_raw["title"]["runs"][0]["text"].to_string();
+            let name = video_raw["title"]["runs"][0]["text"].to_string();
 
             // TODO join
             let desc = video_raw["descriptionSnippet"]["runs"][0]["text"].to_string();
 
             // join?
-            let author = video_raw["ownerText"]["runs"][0]["text"].to_string();
+            let channel_name = video_raw["ownerText"]["runs"][0]["text"].to_string();
 
-            let mut author_channel = String::from(FQDN);
-            let author_channel_path = video_raw["ownerText"]["runs"][0]["navigationEndpoint"]
+            let mut channel_url = String::from(FQDN);
+            let path_channel_url = video_raw["ownerText"]["runs"][0]["navigationEndpoint"]
                 ["commandMetadata"]["webCommandMetadata"]["url"]
                 .to_string();
-            author_channel.push_str(&author_channel_path);
+            channel_url.push_str(&path_channel_url);
             let mut published = "".to_string();
             if !video_raw["publishedTimeText"].is_empty() {
                 published = video_raw["publishedTimeText"]["simpleText"].to_string();
@@ -137,7 +153,7 @@ async fn main() {
 
             let views = match views_raw.parse::<u64>() {
                 Ok(num) => num,
-                Err(err) => 0,
+                Err(_) => 0,
             };
 
             let mut url = String::from(FQDN);
@@ -148,11 +164,11 @@ async fn main() {
 
             videos.push(Video {
                 id,
-                title,
+                name,
                 thumbnail,
                 desc,
-                author,
-                author_channel,
+                channel_name,
+                channel_url,
                 published,
                 length,
                 views,
@@ -167,14 +183,14 @@ async fn main() {
         match v {
             Video {
                 length,
-                author,
-                title,
+                channel_name,
+                name,
                 views,
                 url,
                 ..
             } => println!(
                 "[{}]\t{} - {} ({} views) - {}",
-                length, author, title, views, url
+                length, channel_name, name, views, url
             ),
         }
     }
