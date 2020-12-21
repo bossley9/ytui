@@ -1,6 +1,7 @@
 extern crate reqwest;
 
 use std::env;
+use regex::Regex;
 
 const RED: &str = "\x1b[31m";
 const NC: &str = "\x1b[0m";
@@ -43,17 +44,22 @@ async fn main() {
         Err(_) => return,
     };
 
-    let data = match res.text().await {
+    let mut data = match res.text().await {
         Ok(res) => res,
         Err(_) => "".to_string(),
     };
 
-    println!("data is {}", data);
-
     // 1. condense to a single line (remove new line chars)
+    data = str::replace(&data, "\n", "");
     // 2. trim start up to "var ytInitialData = "
+    let re = Regex::new(r"^.*var\s+ytInitialData\s+=\s+").unwrap();
+    data = re.replace(&data, "").to_string();
     // 3. trim end starting from "</script>"
+    let re = Regex::new(r";?</script>.*$").unwrap();
+    data = re.replace(&data, "").to_string();
     // 4. parse json
+
+    println!("data is {}", data);
 
     // return results
 }
