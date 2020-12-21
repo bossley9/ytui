@@ -69,24 +69,77 @@ async fn main() {
 
     // println!("{}", content);
 
-    // struct Video {
-    //     id: String,
-    //     title: String,
-    //     thumbnail: String,
-    //     desc: String,
-    //     author: String,
-    //     author_channel: String,
-    //     published: String,
-    //     length: String,
-    //     views: u16,
-    //     url: String,
-    // }
+    struct Video {
+        id: String,
+        title: String,
+        thumbnail: String,
+        desc: String,
+        author: String,
+        author_channel: String,
+        published: String,
+        length: String,
+        views: String,
+        url: String,
+    }
+
+    let mut videos: Vec<Video> = Vec::new();
 
     for i in content.members() {
-        println!("videoRenderer is {}", i["videoRenderer"]);
+        let video_raw = &i["videoRenderer"];
+
+        if !video_raw.is_empty() {
+            let id: String = video_raw["videoId"].to_string();
+            let thumbnail: String = video_raw["thumbnail"]["url"].to_string();
+            // TODO join
+            let title = video_raw["title"]["runs"][0]["text"].to_string();
+            // TODO join
+            let desc = video_raw["descriptionSnippet"]["runs"][0]["text"].to_string();
+            // TODO join?
+            let author = video_raw["ownerText"]["runs"][0]["text"].to_string();
+            let mut author_channel = String::from(FQDN);
+            let author_channel_path = video_raw["ownerText"]["runs"][0]["navigationEndpoint"]
+                ["commandMetadata"]["webCommandMetadata"]["url"]
+                .to_string();
+            author_channel.push_str(&author_channel_path);
+            let mut published = "".to_string();
+            if !video_raw["publishedTimeText"].is_empty() {
+                published = video_raw["publishedTimeText"]["simpleText"].to_string();
+            }
+            let length = video_raw["lengthText"]["simpleText"].to_string();
+            let views = video_raw["viewCountText"]["simpleText"].to_string();
+            let mut url = String::from(FQDN);
+            url.push_str("/watch?v=");
+            url.push_str(&id);
+
+            // println!("videoRenderer is {}", video_raw);
+
+            videos.push(Video {
+                id,
+                title,
+                thumbnail,
+                desc,
+                author,
+                author_channel,
+                published,
+                length,
+                views,
+                url,
+            })
+        }
     }
 
     // return results
+    for v in videos.iter() {
+        match v {
+            Video {
+                length,
+                author,
+                title,
+                url,
+                ..
+            } => println!("({}) {} - {} - {}", length, author, title, url),
+        }
+    }
 }
 
 #[cfg(test)]
