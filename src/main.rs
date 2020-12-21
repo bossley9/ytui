@@ -1,27 +1,14 @@
 extern crate reqwest;
 
-use std::env;
-use regex::Regex;
 use json;
+use regex::Regex;
+use std::env;
 
 const RED: &str = "\x1b[31m";
 const NC: &str = "\x1b[0m";
 
 const FQDN: &str = "https://youtube.com";
 const PATH_SEARCH_RESULTS: &str = "/results?search_query=";
-
-// struct Video {
-//     id: String,
-//     title: String,
-//     thumbnail: String,
-//     desc: String,
-//     author: String,
-//     author_channel: String,
-//     published: String,
-//     length: String,
-//     views: u16,
-//     url: String,
-// }
 
 fn encode(unencoded_url: &mut String) {
     *unencoded_url = str::replace(unencoded_url, "%", "%25");
@@ -77,9 +64,23 @@ async fn main() {
         Err(_) => json::JsonValue::new_object(),
     };
 
-    let content = &parsed["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"];
+    let content = &parsed["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]
+        ["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"];
 
     // println!("{}", content);
+
+    // struct Video {
+    //     id: String,
+    //     title: String,
+    //     thumbnail: String,
+    //     desc: String,
+    //     author: String,
+    //     author_channel: String,
+    //     published: String,
+    //     length: String,
+    //     views: u16,
+    //     url: String,
+    // }
 
     for i in content.members() {
         println!("videoRenderer is {}", i["videoRenderer"]);
