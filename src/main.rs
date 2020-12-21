@@ -78,7 +78,8 @@ async fn main() {
         author_channel: String,
         published: String,
         length: String,
-        views: String,
+        is_live: bool,
+        views: u64,
         url: String,
     }
 
@@ -89,13 +90,18 @@ async fn main() {
 
         if !video_raw.is_empty() {
             let id: String = video_raw["videoId"].to_string();
+
             let thumbnail: String = video_raw["thumbnail"]["url"].to_string();
+
             // TODO join
             let title = video_raw["title"]["runs"][0]["text"].to_string();
+
             // TODO join
             let desc = video_raw["descriptionSnippet"]["runs"][0]["text"].to_string();
-            // TODO join?
+
+            // join?
             let author = video_raw["ownerText"]["runs"][0]["text"].to_string();
+
             let mut author_channel = String::from(FQDN);
             let author_channel_path = video_raw["ownerText"]["runs"][0]["navigationEndpoint"]
                 ["commandMetadata"]["webCommandMetadata"]["url"]
@@ -105,8 +111,35 @@ async fn main() {
             if !video_raw["publishedTimeText"].is_empty() {
                 published = video_raw["publishedTimeText"]["simpleText"].to_string();
             }
-            let length = video_raw["lengthText"]["simpleText"].to_string();
-            let views = video_raw["viewCountText"]["simpleText"].to_string();
+
+            let mut is_live = false;
+            let live = &video_raw["viewCountText"]["runs"];
+            if !live.is_empty() {
+                is_live = true;
+            }
+
+            let length = if is_live {
+                "live".to_string()
+            } else {
+                video_raw["lengthText"]["simpleText"].to_string()
+            };
+
+            let mut views_raw = String::new();
+            if !is_live {
+                views_raw = video_raw["viewCountText"]["simpleText"].to_string();
+                let mut re = Regex::new(r"\sviews").unwrap();
+                views_raw = re.replace(&views_raw, "").to_string();
+                re = Regex::new(r",").unwrap();
+                views_raw = re.replace_all(&views_raw, "").to_string();
+            } else {
+                views_raw = video_raw["viewCountText"]["runs"][0]["text"].to_string();
+            }
+
+            let views = match views_raw.parse::<u64>() {
+                Ok(num) => num,
+                Err(err) => 0,
+            };
+
             let mut url = String::from(FQDN);
             url.push_str("/watch?v=");
             url.push_str(&id);
@@ -123,6 +156,7 @@ async fn main() {
                 published,
                 length,
                 views,
+                is_live,
                 url,
             })
         }
@@ -135,9 +169,13 @@ async fn main() {
                 length,
                 author,
                 title,
+                views,
                 url,
                 ..
-            } => println!("({}) {} - {} - {}", length, author, title, url),
+            } => println!(
+                "[{}]\t{} - {} ({} views) - {}",
+                length, author, title, views, url
+            ),
         }
     }
 }
