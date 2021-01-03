@@ -1,6 +1,8 @@
+// extern crate ncurses;
 extern crate reqwest;
 
 use json;
+// use ncurses::*;
 use regex::Regex;
 use std::env;
 
@@ -48,6 +50,39 @@ fn encode(unencoded_url: &mut String) {
 
 #[tokio::main]
 async fn main() {
+    // // init ncurses
+    // initscr();
+    // // let the program handle signals such as CTRL-C
+    // raw();
+    // // handle arrow and function keys
+    // keypad(stdscr(), true);
+    // // prevent stdin from displaying on the screen and messing
+    // // up layout or updating screen coordinates
+    // noecho();
+
+    // // print to the back buffer
+    // addstr("Type any character:");
+    // let ch = getch();
+
+    // if ch == KEY_F(1) {
+    //     addstr("f1 was pressed!");
+    // } else {
+    //     addstr("the pressed key was: ");
+    //     attron(A_BOLD());
+    //     let s = format!("{}", ch);
+    //     addstr(&s);
+    //     attroff(A_BOLD());
+    // }
+
+    // // update the screen
+    // refresh();
+
+    // // wait for keypress
+    // getch();
+
+    // // kill ncurses
+    // endwin();
+
     // search command line args
     let args = env::args().skip(1);
 
@@ -94,104 +129,108 @@ async fn main() {
         Err(_) => json::JsonValue::new_object(),
     };
 
-    let content = &parsed["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]
-        ["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"];
+    let content_raw = &parsed["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]
+        ["sectionListRenderer"]["contents"];
 
-    // println!("{}", content);
+    for c in content_raw.members() {
+        if !&c["itemSectionRenderer"].is_empty() {
+            let content = &c["itemSectionRenderer"]["contents"];
 
-    let mut videos: Vec<Video> = Vec::new();
+            let mut videos: Vec<Video> = Vec::new();
 
-    for i in content.members() {
-        let video_raw = &i["videoRenderer"];
+            for i in content.members() {
+                let video_raw = &i["videoRenderer"];
 
-        if !video_raw.is_empty() {
-            let id: String = video_raw["videoId"].to_string();
+                if !video_raw.is_empty() {
+                    let id: String = video_raw["videoId"].to_string();
 
-            let thumbnail: String = video_raw["thumbnail"]["url"].to_string();
+                    let thumbnail: String = video_raw["thumbnail"]["url"].to_string();
 
-            // TODO join
-            let name = video_raw["title"]["runs"][0]["text"].to_string();
+                    // TODO join
+                    let name = video_raw["title"]["runs"][0]["text"].to_string();
 
-            // TODO join
-            let desc = video_raw["descriptionSnippet"]["runs"][0]["text"].to_string();
+                    // TODO join
+                    let desc = video_raw["descriptionSnippet"]["runs"][0]["text"].to_string();
 
-            // join?
-            let channel_name = video_raw["ownerText"]["runs"][0]["text"].to_string();
+                    // join?
+                    let channel_name = video_raw["ownerText"]["runs"][0]["text"].to_string();
 
-            let mut channel_url = String::from(FQDN);
-            let path_channel_url = video_raw["ownerText"]["runs"][0]["navigationEndpoint"]
-                ["commandMetadata"]["webCommandMetadata"]["url"]
-                .to_string();
-            channel_url.push_str(&path_channel_url);
-            let mut published = "".to_string();
-            if !video_raw["publishedTimeText"].is_empty() {
-                published = video_raw["publishedTimeText"]["simpleText"].to_string();
+                    let mut channel_url = String::from(FQDN);
+                    let path_channel_url = video_raw["ownerText"]["runs"][0]["navigationEndpoint"]
+                        ["commandMetadata"]["webCommandMetadata"]["url"]
+                        .to_string();
+                    channel_url.push_str(&path_channel_url);
+                    let mut published = "".to_string();
+                    if !video_raw["publishedTimeText"].is_empty() {
+                        published = video_raw["publishedTimeText"]["simpleText"].to_string();
+                    }
+
+                    let mut is_live = false;
+                    let live = &video_raw["viewCountText"]["runs"];
+                    if !live.is_empty() {
+                        is_live = true;
+                    }
+
+                    let length = if is_live {
+                        "live".to_string()
+                    } else {
+                        video_raw["lengthText"]["simpleText"].to_string()
+                    };
+
+                    let mut views_raw = String::new();
+                    if !is_live {
+                        views_raw = video_raw["viewCountText"]["simpleText"].to_string();
+                        let mut re = Regex::new(r"\sviews").unwrap();
+                        views_raw = re.replace(&views_raw, "").to_string();
+                        re = Regex::new(r",").unwrap();
+                        views_raw = re.replace_all(&views_raw, "").to_string();
+                    } else {
+                        views_raw = video_raw["viewCountText"]["runs"][0]["text"].to_string();
+                    }
+
+                    let views = match views_raw.parse::<u64>() {
+                        Ok(num) => num,
+                        Err(_) => 0,
+                    };
+
+                    let mut url = String::from(FQDN);
+                    url.push_str("/watch?v=");
+                    url.push_str(&id);
+
+                    // println!("videoRenderer is {}", video_raw);
+
+                    videos.push(Video {
+                        id,
+                        name,
+                        thumbnail,
+                        desc,
+                        channel_name,
+                        channel_url,
+                        published,
+                        length,
+                        views,
+                        is_live,
+                        url,
+                    })
+                }
             }
 
-            let mut is_live = false;
-            let live = &video_raw["viewCountText"]["runs"];
-            if !live.is_empty() {
-                is_live = true;
+            // return results
+            for v in videos.iter() {
+                match v {
+                    Video {
+                        length,
+                        channel_name,
+                        name,
+                        views,
+                        url,
+                        ..
+                    } => println!(
+                        "[{}]\t{} - {} ({} views) - {}",
+                        length, channel_name, name, views, url
+                    ),
+                }
             }
-
-            let length = if is_live {
-                "live".to_string()
-            } else {
-                video_raw["lengthText"]["simpleText"].to_string()
-            };
-
-            let mut views_raw = String::new();
-            if !is_live {
-                views_raw = video_raw["viewCountText"]["simpleText"].to_string();
-                let mut re = Regex::new(r"\sviews").unwrap();
-                views_raw = re.replace(&views_raw, "").to_string();
-                re = Regex::new(r",").unwrap();
-                views_raw = re.replace_all(&views_raw, "").to_string();
-            } else {
-                views_raw = video_raw["viewCountText"]["runs"][0]["text"].to_string();
-            }
-
-            let views = match views_raw.parse::<u64>() {
-                Ok(num) => num,
-                Err(_) => 0,
-            };
-
-            let mut url = String::from(FQDN);
-            url.push_str("/watch?v=");
-            url.push_str(&id);
-
-            // println!("videoRenderer is {}", video_raw);
-
-            videos.push(Video {
-                id,
-                name,
-                thumbnail,
-                desc,
-                channel_name,
-                channel_url,
-                published,
-                length,
-                views,
-                is_live,
-                url,
-            })
-        }
-    }
-
-    // return results
-    for v in videos.iter() {
-        match v {
-            Video {
-                length,
-                channel_name,
-                name,
-                views,
-                url,
-                ..
-            } => println!(
-                "[{}]\t{} - {} ({} views) - {}",
-                length, channel_name, name, views, url
-            ),
         }
     }
 }
