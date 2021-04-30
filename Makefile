@@ -5,16 +5,12 @@ BIN=$(PREFIX)/bin
 TARGET=target
 RELEASE=$(TARGET)/release
 
-CP=cp -f
-RM=rm -rf
-MKDIR_P=mkdir -p
-
 all:
 	cargo build --release
 
-install: all
-	$(MKDIR_P) $(BIN)
-	$(CP) $(RELEASE)/$(BINARY) $(BIN)/$(BINARY)
+install:
+	@mkdir -p $(BIN)
+	@mv $(RELEASE)/$(BINARY) $(BIN)/$(BINARY)
 
 check:
 	cargo check
@@ -23,12 +19,12 @@ debug:
 	cargo build
 
 clean:
-	$(RM) $(TARGET)
+	@rm -rf $(TARGET)
 
 test:
 	cargo test
 
 uninstall:
-	$(RM) $(BIN)/$(BINARY)
+	@rm -f $(BIN)/$(BINARY)
 
 .PHONY: all install check debug clean test uninstall
